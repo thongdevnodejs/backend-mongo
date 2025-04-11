@@ -94,3 +94,6 @@ dist
 
 # Built Visual Studio Code Extensions
 *.vsix
+.qodo
+
+.early.coverage

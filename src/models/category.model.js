@@ -5,10 +5,6 @@ const categorySchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  pictureURL: {
-    type: String,
-    required: true
-  },
   // Thêm tham chiếu đến các sản phẩm trong category
   products: [{
     type: mongoose.Schema.Types.ObjectId,
