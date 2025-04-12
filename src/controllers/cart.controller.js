@@ -4,10 +4,11 @@ const { successResponse, errorResponse } = require('../utils/response');
 class CartController {
   async add(req, res) {
     try {
-      const { userId, productId, quantity } = req.body;
+      const userId = req.user.id;
+      const { productId, quantity } = req.body;
 
-      if (!userId || !productId || quantity === undefined) {
-        return errorResponse(res, 'userId, productId, and quantity are required', 400);
+      if (!productId || quantity === undefined) {
+        return errorResponse(res, 'productId and quantity are required', 400);
       }
 
       const response = await addCart(userId, productId, quantity);
@@ -19,10 +20,11 @@ class CartController {
 
   async remove(req, res) {
     try {
-      const { userId, productId } = req.body;
+      const userId = req.user.id;
+      const { productId } = req.body;
 
-      if (!userId || !productId) {
-        return errorResponse(res, 'userId and productId are required', 400);
+      if (!productId) {
+        return errorResponse(res, 'productId is required', 400);
       }
 
       const response = await deleteCart(userId, productId);
@@ -34,10 +36,11 @@ class CartController {
 
   async update(req, res) {
     try {
-      const { userId, productId, quantity } = req.body;
+      const userId = req.user.id;
+      const { productId, quantity } = req.body;
 
-      if (!userId || !productId || quantity === undefined) {
-        return errorResponse(res, 'userId, productId, and quantity are required', 400);
+      if (!productId || quantity === undefined) {
+        return errorResponse(res, 'productId and quantity are required', 400);
       }
 
       const response = await updateCartItem(userId, productId, quantity);
@@ -49,10 +52,11 @@ class CartController {
 
   async getByUserId(req, res) {
     try {
-      const { userId } = req.params;
+      // Get userId from the authenticated user
+      const userId = req.user.id;
 
       if (!userId) {
-        return errorResponse(res, 'userId is required', 400);
+        return errorResponse(res, 'User ID not found in token', 400);
       }
 
       const response = await getCartItems(userId);

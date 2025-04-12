@@ -12,7 +12,7 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    amount: {
+    quantity: {
       type: Number,
       required: true,
     },

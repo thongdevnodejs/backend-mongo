@@ -7,7 +7,7 @@ const PREFIX = 'category';
 
 // Public routes
 router.get(`/${PREFIX}`, categoryController.get);
-router.get(`/${PREFIX}/:id`, categoryController.getById);
+// router.get(`/${PREFIX}/:id`, categoryController.getById);
 
 // Protected routes (require authentication)
 router.post(`/${PREFIX}`, authenticate, categoryController.create);
