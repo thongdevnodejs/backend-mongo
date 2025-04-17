@@ -14,14 +14,8 @@ const getOrders = async (isAdmin = false, userId = null) => {
     // Lấy tất cả đơn hàng, sắp xếp theo thời gian tạo mới nhất
     const orders = await Order.find(query)
       .sort({ createdAt: -1 })
-      .populate('user', 'name email')
-      .populate({
-        path: 'items',
-        populate: {
-          path: 'product',
-          model: 'Product'
-        }
-      });
+      .populate('user', 'name email phone address') // Thêm phone và address để có địa chỉ user
+      .populate('items.product', 'name price pictureURL'); // Tham chiếu trực tiếp đến Product
 
     return orders;
   } catch (error) {
@@ -41,14 +35,8 @@ const getOrderById = async (orderId, userId = null, isAdmin = false) => {
     }
 
     const order = await Order.findOne(query)
-      .populate('user', 'name email')
-      .populate({
-        path: 'items',
-        populate: {
-          path: 'product',
-          model: 'Product'
-        }
-      });
+      .populate('user', 'name email phone address') // Thêm phone và address để có địa chỉ user
+      .populate('items.product', 'name price pictureURL'); // Tham chiếu trực tiếp đến Product
 
     if (!order) {
       throw new Error('Order not found or you do not have permission to view this order');
@@ -89,10 +77,7 @@ const createOrder = async (userId) => {
       // Tạo order item
       const orderItem = {
         product: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: cartItem.quantity,
-        pictureURL: product.pictureURL
+        quantity: cartItem.quantity
       };
 
       orderItems.push(orderItem);
@@ -108,8 +93,7 @@ const createOrder = async (userId) => {
       user: userId,
       items: orderItems,
       totalPrice,
-      status: 'pending',
-      transactionId: null // Will be updated by client
+      status: 'pending'
     });
 
     await order.save();

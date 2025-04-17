@@ -47,11 +47,13 @@ Lấy danh sách đơn hàng. Đối với người dùng thông thường, ch�
       },
       "items": [
         {
-          "product": "65f1a2b3c4d5e6f7a8b9c0d3",
-          "name": "Tên Sản phẩm",
-          "price": 299000,
-          "quantity": 2,
-          "pictureURL": "https://example.com/product.jpg"
+          "product": {
+            "_id": "65f1a2b3c4d5e6f7a8b9c0d3",
+            "name": "Tên Sản phẩm",
+            "price": 299000,
+            "pictureURL": "https://example.com/product.jpg"
+          },
+          "quantity": 2
         }
       ],
       "totalPrice": 598000,
@@ -95,13 +97,9 @@ Lấy một đơn hàng cụ thể theo ID. Người dùng chỉ có thể truy 
           "_id": "65f1a2b3c4d5e6f7a8b9c0d3",
           "name": "Tên Sản phẩm",
           "price": 299000,
-          "pictureURL": "https://example.com/product.jpg",
-          "description": "Mô tả sản phẩm"
+          "pictureURL": "https://example.com/product.jpg"
         },
-        "name": "Tên Sản phẩm",
-        "price": 299000,
-        "quantity": 2,
-        "pictureURL": "https://example.com/product.jpg"
+        "quantity": 2
       }
     ],
     "totalPrice": 598000,
@@ -135,11 +133,13 @@ Tạo đơn hàng mới cho người dùng đã xác thực dựa trên nội du
     "user": "65f1a2b3c4d5e6f7a8b9c0d2",
     "items": [
       {
-        "product": "65f1a2b3c4d5e6f7a8b9c0d3",
-        "name": "Tên Sản phẩm",
-        "price": 299000,
-        "quantity": 2,
-        "pictureURL": "https://example.com/product.jpg"
+        "product": {
+          "_id": "65f1a2b3c4d5e6f7a8b9c0d3",
+          "name": "Tên Sản phẩm",
+          "price": 299000,
+          "pictureURL": "https://example.com/product.jpg"
+        },
+        "quantity": 2
       }
     ],
     "totalPrice": 598000,
@@ -208,11 +208,13 @@ Các giá trị trạng thái hợp lệ:
     "user": "65f1a2b3c4d5e6f7a8b9c0d2",
     "items": [
       {
-        "product": "65f1a2b3c4d5e6f7a8b9c0d3",
-        "name": "Tên Sản phẩm",
-        "price": 299000,
-        "quantity": 2,
-        "pictureURL": "https://example.com/product.jpg"
+        "product": {
+          "_id": "65f1a2b3c4d5e6f7a8b9c0d3",
+          "name": "Tên Sản phẩm",
+          "price": 299000,
+          "pictureURL": "https://example.com/product.jpg"
+        },
+        "quantity": 2
       }
     ],
     "totalPrice": 598000,
