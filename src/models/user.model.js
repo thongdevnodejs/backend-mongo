@@ -26,14 +26,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // Thêm tham chiếu đến các đơn hàng
     orders: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Order",
       },
     ],
-    // Thêm tham chiếu đến giỏ hàng
     cartItems: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -10,6 +10,7 @@ const authenticate = (req, res, next) => {
   try {
     const decoded = verifyToken(token);
     req.user = decoded; // Store decoded token (user info) in request object
+    console.log("data user", req.user)
     next();
   } catch (err) {
     res.status(400).json({ error: 'Token is not valid' });

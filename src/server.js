@@ -22,7 +22,6 @@ app.use('/api/v1/', require('./routes/category.routes.js'));
 app.use('/api/v1/', require('./routes/order.routes.js'));
 app.use('/api/v1/', require('./routes/cart.routes.js'));
 app.use('/api/v1/', require('./routes/user.routes.js'));
-app.use('/api/v1/', require('./routes/webhook.routes.js'));
 
 // Root route
 app.get('/', (req, res) => {

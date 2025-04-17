@@ -6,7 +6,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h"; // Default to 1 hour 
 
 // Generate JWT token
 const generateToken = (user) => {
-  return jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+  return jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN, // Token expires based on environment variable
   });
 };

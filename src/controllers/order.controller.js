@@ -2,81 +2,74 @@ const {
   createOrder,
   getOrders,
   getOrderById,
-  getOrdersByUser,
-  updateOrderStatus,
-  cancelOrder,
-  updateOrderTracking,
-  getOrderStats
+  updateOrderStatus
 } = require('../services/order.service');
 const { successResponse, errorResponse } = require('../utils/response');
 
 class OrderController {
-  // Get all orders with filtering, pagination, and sorting
+  // Lấy danh sách đơn hàng (admin: tất cả, user: chỉ của mình)
   async getOrders(req, res) {
     try {
-      const filters = req.query;
-      const result = await getOrders(filters);
+      const userId = req.user.id;
+      const isAdmin = req.user.isAdmin;
+
+      const result = await getOrders(isAdmin, userId);
       return successResponse(res, result);
     } catch (error) {
       return errorResponse(res, 'Failed to get orders', 500, error);
     }
   }
 
-  // Get a specific order by ID
+  // Lấy chi tiết đơn hàng theo ID
   async getOrderById(req, res) {
     try {
       const { id } = req.params;
+      const userId = req.user.id;
+      const isAdmin = req.user.isAdmin;
+
       if (!id) {
         return errorResponse(res, 'Order ID is required', 400);
       }
 
-      const result = await getOrderById(id);
+      const result = await getOrderById(id, userId, isAdmin);
       return successResponse(res, result);
     } catch (error) {
-      if (error.message === 'Order not found') {
+      if (error.message.includes('Order not found')) {
         return errorResponse(res, error.message, 404);
       }
       return errorResponse(res, 'Failed to get order', 500, error);
     }
   }
 
-  // Get orders for the current user
-  async getUserOrders(req, res) {
-    try {
-      const userId = req.user.id;
-      const filters = req.query;
-      const result = await getOrdersByUser(userId, filters);
-      return successResponse(res, result);
-    } catch (error) {
-      return errorResponse(res, 'Failed to get user orders', 500, error);
-    }
-  }
-
-  // Create a new order
+  // Tạo đơn hàng mới
   async create(req, res) {
     try {
       const userId = req.user.id;
-      const { shippingAddress } = req.body;
 
-      const result = await createOrder(userId, shippingAddress);
+      const result = await createOrder(userId);
       return successResponse(res, result, 'Order created successfully', 201);
     } catch (error) {
       return errorResponse(res, 'Failed to create order', 500, error);
     }
   }
 
-  // Update order status
+  // Cập nhật trạng thái đơn hàng (chỉ admin)
   async updateStatus(req, res) {
     try {
       const { id } = req.params;
-      const { status, note } = req.body;
-      const updatedBy = req.user.id;
+      const { status } = req.body;
+      const isAdmin = req.user.isAdmin;
 
       if (!id || !status) {
         return errorResponse(res, 'Order ID and status are required', 400);
       }
 
-      const result = await updateOrderStatus(id, status, note, updatedBy);
+      // Kiểm tra quyền admin
+      if (!isAdmin) {
+        return errorResponse(res, 'Only administrators can update order status', 403);
+      }
+
+      const result = await updateOrderStatus(id, status, isAdmin);
       return successResponse(res, result, `Order status updated to ${status}`);
     } catch (error) {
       if (error.message.includes('Cannot change status')) {
@@ -86,54 +79,7 @@ class OrderController {
     }
   }
 
-  // Cancel an order
-  async cancelOrder(req, res) {
-    try {
-      const { id } = req.params;
-      const { reason } = req.body;
-      const cancelledBy = req.user.id;
 
-      if (!id) {
-        return errorResponse(res, 'Order ID is required', 400);
-      }
-
-      const result = await cancelOrder(id, reason, cancelledBy);
-      return successResponse(res, result, 'Order cancelled successfully');
-    } catch (error) {
-      if (error.message.includes('Cannot cancel')) {
-        return errorResponse(res, error.message, 400);
-      }
-      return errorResponse(res, 'Failed to cancel order', 500, error);
-    }
-  }
-
-  // Update tracking information
-  async updateTracking(req, res) {
-    try {
-      const { id } = req.params;
-      const { trackingNumber, carrier, estimatedDeliveryDate } = req.body;
-
-      if (!id || !trackingNumber || !carrier) {
-        return errorResponse(res, 'Order ID, tracking number, and carrier are required', 400);
-      }
-
-      const result = await updateOrderTracking(id, { trackingNumber, carrier, estimatedDeliveryDate });
-      return successResponse(res, result, 'Tracking information updated successfully');
-    } catch (error) {
-      return errorResponse(res, 'Failed to update tracking information', 500, error);
-    }
-  }
-
-  // Get order statistics
-  async getStats(req, res) {
-    try {
-      const filters = req.query;
-      const result = await getOrderStats(filters);
-      return successResponse(res, result);
-    } catch (error) {
-      return errorResponse(res, 'Failed to get order statistics', 500, error);
-    }
-  }
 }
 
 module.exports = new OrderController();
