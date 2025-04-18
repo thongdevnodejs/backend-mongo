@@ -1,6 +1,6 @@
-# Tài liệu API Quản lý Đơn hàng
+# Tài liệu API Quản lý Đơn hàng và Người dùng
 
-Tài liệu này mô tả các API endpoints cho việc quản lý đơn hàng trong hệ thống. Các endpoints này cho phép người dùng tạo đơn hàng và quản trị viên quản lý đơn hàng.
+Tài liệu này mô tả các API endpoints cho việc quản lý đơn hàng và thông tin người dùng trong hệ thống. Các endpoints này cho phép người dùng tạo đơn hàng, cập nhật thông tin cá nhân và quản trị viên quản lý đơn hàng.
 
 ## URL Cơ sở
 
@@ -22,6 +22,24 @@ JWT token chứa thông tin người dùng, bao gồm:
 Khi token được xác thực, thông tin người dùng sẽ được đính kèm vào `req.user`.
 
 ## Mô hình dữ liệu
+
+### User Model
+
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String,
+  phone: String,
+  address: String,
+  password: String, // Mật khẩu đã được mã hóa
+  isAdmin: Boolean,
+  orders: [ObjectId], // Tham chiếu đến các đơn hàng
+  cartItems: [ObjectId], // Tham chiếu đến các mục trong giỏ hàng
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
 ### Order Model
 
@@ -52,6 +70,299 @@ Khi token được xác thực, thông tin người dùng sẽ được đính k
   createdAt: Date,
   updatedAt: Date
 }
+```
+
+## Các Endpoints Người dùng
+
+### 1. Lấy Thông tin Cá nhân
+
+Lấy thông tin cá nhân của người dùng đã xác thực.
+
+**Endpoint:** `GET /user/profile`
+
+**Xác thực:** Bắt buộc
+
+**Tham số:** Không có
+
+**Phản hồi:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "65f1a2b3c4d5e6f7a8b9c0d2",
+    "name": "Nguyễn Văn A",
+    "email": "nguyenvana@example.com",
+    "phone": "0987654321",
+    "address": "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh",
+    "isAdmin": false,
+    "createdAt": "2023-06-15T10:30:00.000Z",
+    "updatedAt": "2023-06-15T10:35:00.000Z"
+  },
+  "message": "Success"
+}
+```
+
+**Phản hồi Lỗi:**
+
+- Nếu người dùng không tồn tại:
+```json
+{
+  "success": false,
+  "message": "User not found",
+  "statusCode": 404
+}
+```
+
+**Mã React tham khảo:**
+```jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const ProfilePage = () => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/v1/user/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setProfile(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load profile');
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!profile) return <div>No profile data found</div>;
+
+  return (
+    <div>
+      <h2>My Profile</h2>
+      <div>
+        <p><strong>Name:</strong> {profile.name}</p>
+        <p><strong>Email:</strong> {profile.email}</p>
+        <p><strong>Phone:</strong> {profile.phone || 'Not provided'}</p>
+        <p><strong>Address:</strong> {profile.address || 'Not provided'}</p>
+      </div>
+
+      <div>
+        <a href="/profile/edit">Edit Profile</a>
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;
+```
+
+### 2. Cập nhật Thông tin Cá nhân
+
+Cập nhật thông tin cá nhân của người dùng đã xác thực. Không bao gồm việc thay đổi mật khẩu.
+
+**Endpoint:** `PUT /user/profile`
+
+**Xác thực:** Bắt buộc
+
+**Body Request:**
+```json
+{
+  "name": "Nguyễn Văn A",
+  "email": "nguyenvana@example.com",
+  "phone": "0987654321",
+  "address": "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh"
+}
+```
+
+**Lưu ý:** Tất cả các trường đều là tùy chọn. Bạn có thể chỉ cập nhật một hoặc nhiều trường.
+
+**Phản hồi:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "65f1a2b3c4d5e6f7a8b9c0d2",
+    "name": "Nguyễn Văn A",
+    "email": "nguyenvana@example.com",
+    "phone": "0987654321",
+    "address": "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh",
+    "isAdmin": false,
+    "createdAt": "2023-06-15T10:30:00.000Z",
+    "updatedAt": "2023-06-15T10:35:00.000Z"
+  },
+  "message": "Profile updated successfully"
+}
+```
+
+**Phản hồi Lỗi:**
+
+- Nếu không có dữ liệu cập nhật:
+```json
+{
+  "success": false,
+  "message": "No data provided for update",
+  "statusCode": 400
+}
+```
+
+- Nếu email đã được sử dụng bởi tài khoản khác:
+```json
+{
+  "success": false,
+  "message": "Email already in use by another account",
+  "statusCode": 400
+}
+```
+
+- Nếu số điện thoại đã được sử dụng bởi tài khoản khác:
+```json
+{
+  "success": false,
+  "message": "Phone number already in use by another account",
+  "statusCode": 400
+}
+```
+
+**Mã React tham khảo:**
+```jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const ProfileForm = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Lấy thông tin người dùng hiện tại
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/v1/user/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const userData = response.data.data;
+        setFormData({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          address: userData.address || ''
+        });
+      } catch (err) {
+        setError('Failed to load user profile');
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('/api/v1/user/profile', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess(true);
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Update Profile</h2>
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">Profile updated successfully!</div>}
+
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="name">Name:</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone">Phone:</label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="address">Address:</label>
+          <textarea
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            rows="3"
+          ></textarea>
+        </div>
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Updating...' : 'Update Profile'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default ProfileForm;
 ```
 
 ## Các Endpoints Đơn hàng
@@ -310,6 +621,12 @@ Quy trình thông thường của trạng thái đơn hàng là:
 4. `delivered`: Đơn hàng đã được giao cho khách hàng
 5. `completed`: Đơn hàng đã hoàn thành (trạng thái cuối cùng)
 
+## Lưu ý về Thông tin Giao hàng
+
+Trong hệ thống này, thông tin giao hàng được lấy trực tiếp từ thông tin người dùng. Khi người dùng cập nhật thông tin cá nhân (tên, địa chỉ, số điện thoại), thông tin này sẽ được sử dụng cho việc giao hàng trong các đơn hàng mới.
+
+Khi hiển thị thông tin đơn hàng, API sẽ trả về thông tin người dùng đầy đủ bao gồm địa chỉ và số điện thoại. Frontend có thể sử dụng thông tin này để hiển thị thông tin giao hàng.
+
 ## Lưu ý về Kiểm tra Quyền Admin
 
 Trong hệ thống này, quyền admin được kiểm tra thông qua trường `isAdmin` trong đối tượng người dùng. Khi một người dùng đăng nhập, thông tin của họ (bao gồm `isAdmin`) được lưu trong JWT token. Khi token được xác thực, thông tin người dùng được đính kèm vào `req.user`.
@@ -472,10 +789,10 @@ const OrderDetails = () => {
           {order.items.map(item => (
             <tr key={item._id}>
               <td>
-                <img 
-                  src={item.product.pictureURL} 
-                  alt={item.product.name} 
-                  style={{ width: '50px', height: '50px' }} 
+                <img
+                  src={item.product.pictureURL}
+                  alt={item.product.name}
+                  style={{ width: '50px', height: '50px' }}
                 />
               </td>
               <td>{item.product.name}</td>
@@ -529,7 +846,7 @@ const Checkout = () => {
       const response = await axios.post('/api/v1/orders', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Redirect to order details page
       navigate(`/orders/${response.data.data._id}`);
     } catch (err) {
@@ -542,11 +859,11 @@ const Checkout = () => {
     <div>
       <h2>Checkout</h2>
       {error && <div className="error">{error}</div>}
-      
+
       {/* Display cart items and shipping information here */}
-      
-      <button 
-        onClick={handlePlaceOrder} 
+
+      <button
+        onClick={handlePlaceOrder}
         disabled={loading}
       >
         {loading ? 'Processing...' : 'Place Order'}
@@ -671,17 +988,17 @@ const UpdateOrderStatus = ({ orderId, currentStatus, onStatusUpdate }) => {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      
+
       const token = localStorage.getItem('token');
       const response = await axios.put(
         `/api/v1/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       setSuccess(true);
       setLoading(false);
-      
+
       // Call the callback function to update the parent component
       if (onStatusUpdate) {
         onStatusUpdate(response.data.data);
@@ -697,12 +1014,12 @@ const UpdateOrderStatus = ({ orderId, currentStatus, onStatusUpdate }) => {
       <h3>Update Order Status</h3>
       {error && <div className="error">{error}</div>}
       {success && <div className="success">Status updated successfully!</div>}
-      
+
       <div>
         <label htmlFor="status">Status:</label>
-        <select 
-          id="status" 
-          value={status} 
+        <select
+          id="status"
+          value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
           {statusOptions.map(option => (
@@ -712,9 +1029,9 @@ const UpdateOrderStatus = ({ orderId, currentStatus, onStatusUpdate }) => {
           ))}
         </select>
       </div>
-      
-      <button 
-        onClick={handleStatusChange} 
+
+      <button
+        onClick={handleStatusChange}
         disabled={loading || status === currentStatus}
       >
         {loading ? 'Updating...' : 'Update Status'}
@@ -738,26 +1055,26 @@ import axios from 'axios';
 const ErrorHandlingExample = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const handleApiCall = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem('token');
       await axios.post('/api/v1/orders', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Success handling
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      
+
       // Error handling based on status code
       if (err.response) {
         const { status, data } = err.response;
-        
+
         switch (status) {
           case 400:
             // Bad request - display validation errors
@@ -789,7 +1106,7 @@ const ErrorHandlingExample = () => {
       }
     }
   };
-  
+
   return (
     <div>
       {error && (
@@ -798,7 +1115,7 @@ const ErrorHandlingExample = () => {
           <button onClick={() => setError(null)}>Dismiss</button>
         </div>
       )}
-      
+
       <button onClick={handleApiCall} disabled={loading}>
         {loading ? 'Processing...' : 'Submit'}
       </button>
