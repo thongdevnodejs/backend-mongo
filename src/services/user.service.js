@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const bcrypt = require("bcrypt");
 
 const getUserByEmail = async (email) => {
   try {
@@ -112,9 +113,48 @@ const updateUser = async (userId, userData) => {
   }
 };
 
+const changePassword = async (userId, { currentPassword, newPassword }) => {
+  try {
+    // Kiểm tra xem có cung cấp mật khẩu hiện tại và mật khẩu mới không
+    if (!currentPassword || !newPassword) {
+      throw new Error("Current password and new password are required");
+    }
+
+    // Lấy thông tin người dùng từ database
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new Error("Current password is incorrect");
+    }
+
+    // Kiểm tra xem mật khẩu mới có giống mật khẩu hiện tại không
+    if (currentPassword === newPassword) {
+      throw new Error("New password must be different from current password");
+    }
+
+    // Mã hóa mật khẩu mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Cập nhật mật khẩu
+    user.password = hashedPassword;
+    await user.save();
+
+    return { message: "Password changed successfully" };
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getUserByEmail,
   getUserById,
   createUser,
   updateUser,
+  changePassword,
 };

@@ -169,7 +169,7 @@ export default ProfilePage;
 
 ### 2. Cập nhật Thông tin Cá nhân
 
-Cập nhật thông tin cá nhân của người dùng đã xác thực. Không bao gồm việc thay đổi mật khẩu.
+Cập nhật thông tin cá nhân của người dùng đã xác thực. Không bao gồm việc thay đổi mật khẩu. Để thay đổi mật khẩu, sử dụng API thay đổi mật khẩu riêng biệt.
 
 **Endpoint:** `PUT /user/profile`
 
@@ -363,6 +363,175 @@ const ProfileForm = () => {
 };
 
 export default ProfileForm;
+```
+
+### 3. Thay đổi Mật khẩu
+
+Thay đổi mật khẩu của người dùng đã xác thực.
+
+**Endpoint:** `PUT /user/change-password`
+
+**Xác thực:** Bắt buộc
+
+**Body Request:**
+```json
+{
+  "currentPassword": "mật_khẩu_hiện_tại",
+  "newPassword": "mật_khẩu_mới"
+}
+```
+
+**Phản hồi:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Password changed successfully"
+  },
+  "message": "Password changed successfully"
+}
+```
+
+**Phản hồi Lỗi:**
+
+- Nếu thiếu mật khẩu hiện tại hoặc mật khẩu mới:
+```json
+{
+  "success": false,
+  "message": "Current password and new password are required",
+  "statusCode": 400
+}
+```
+
+- Nếu mật khẩu hiện tại không chính xác:
+```json
+{
+  "success": false,
+  "message": "Current password is incorrect",
+  "statusCode": 400
+}
+```
+
+- Nếu mật khẩu mới giống mật khẩu hiện tại:
+```json
+{
+  "success": false,
+  "message": "New password must be different from current password",
+  "statusCode": 400
+}
+```
+
+**Mã React tham khảo:**
+```jsx
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const ChangePasswordForm = () => {
+  const [formData, setFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    // Kiểm tra xác nhận mật khẩu
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('New password and confirm password do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('/api/v1/user/change-password', {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setSuccess(true);
+      setLoading(false);
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Change Password</h2>
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">Password changed successfully!</div>}
+
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="currentPassword">Current Password:</label>
+          <input
+            type="password"
+            id="currentPassword"
+            name="currentPassword"
+            value={formData.currentPassword}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="newPassword">New Password:</label>
+          <input
+            type="password"
+            id="newPassword"
+            name="newPassword"
+            value={formData.newPassword}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword">Confirm New Password:</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Changing Password...' : 'Change Password'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default ChangePasswordForm;
 ```
 
 ## Các Endpoints Đơn hàng
